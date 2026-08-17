@@ -53,7 +53,7 @@ def _fig_to_png(fig, width_px: int = 700, height_px: int = 380) -> bytes | None:
     try:
         import plotly.io as pio
         return pio.to_image(
-            fig, format="png", width=width_px, height=height_px, scale=2
+            fig, format="png", width=width_px, height=height_px, scale=1.5
         )
     except Exception as exc:
         LOGGER.warning("Chart render failed: %s", exc)
@@ -306,10 +306,37 @@ def generate_pdf_report(df: pd.DataFrame, insights: list[dict]) -> bytes:
             plot_top_products, plot_sales_funnel,
             plot_payment_methods, plot_age_distribution,
         )
+        import concurrent.futures
+
+        # Pre-calculate figures and submit to ThreadPool for parallel PNG generation
+        figs = {
+            "trend": (plot_revenue_trend(df), 900, 400),
+            "cat": (plot_category_revenue(df), 440, 340),
+            "brand": (plot_brand_performance(df), 440, 340),
+            "reg": (plot_region_sales(df), 440, 340),
+            "prod": (plot_top_products(df, top_n=8), 440, 340),
+            "pay": (plot_payment_methods(df), 440, 340),
+            "age": (plot_age_distribution(df), 440, 340),
+            "funnel": (plot_sales_funnel(df), 700, 360),
+        }
+
+        pngs = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_key = {
+                executor.submit(_fig_to_png, fig, w, h): key
+                for key, (fig, w, h) in figs.items()
+            }
+            for future in concurrent.futures.as_completed(future_to_key):
+                key = future_to_key[future]
+                try:
+                    pngs[key] = future.result(timeout=60)
+                except Exception as exc:
+                    LOGGER.warning("Chart %s render failed: %s", key, exc)
+                    pngs[key] = None
 
         # 3a. Revenue Trend (full width)
         elems.append(Paragraph("3a. Monthly Revenue Trend", sub_sec))
-        png = _fig_to_png(plot_revenue_trend(df), width_px=900, height_px=400)
+        png = pngs.get("trend")
         elems += _chart_elem(png, PAGE_W, 3.2 * inch)
         if png:
             elems.append(Paragraph(
@@ -319,8 +346,8 @@ def generate_pdf_report(df: pd.DataFrame, insights: list[dict]) -> bytes:
 
         # 3b. Category Revenue + Brand Performance (side by side)
         elems.append(Paragraph("3b. Revenue by Category & Brand Performance", sub_sec))
-        png_cat   = _fig_to_png(plot_category_revenue(df),   width_px=440, height_px=340)
-        png_brand = _fig_to_png(plot_brand_performance(df), width_px=440, height_px=340)
+        png_cat   = pngs.get("cat")
+        png_brand = pngs.get("brand")
         half = (PAGE_W - 8) / 2
         row_data = [[]]
         if png_cat:
@@ -342,8 +369,8 @@ def generate_pdf_report(df: pd.DataFrame, insights: list[dict]) -> bytes:
 
         # 3c. Region Sales + Top Products (side by side)
         elems.append(Paragraph("3c. Regional Sales & Top Products", sub_sec))
-        png_reg  = _fig_to_png(plot_region_sales(df),       width_px=440, height_px=340)
-        png_prod = _fig_to_png(plot_top_products(df, top_n=8), width_px=440, height_px=340)
+        png_reg  = pngs.get("reg")
+        png_prod = pngs.get("prod")
         row_data2 = [[]]
         if png_reg:
             row_data2[0].append(Image(BytesIO(png_reg), width=half, height=2.7 * inch))
@@ -365,8 +392,8 @@ def generate_pdf_report(df: pd.DataFrame, insights: list[dict]) -> bytes:
         # 3d. Payment Methods + Age Distribution (side by side)
         elems.append(PageBreak())
         elems.append(Paragraph("3d. Payment Methods & Customer Age Distribution", sub_sec))
-        png_pay = _fig_to_png(plot_payment_methods(df),    width_px=440, height_px=340)
-        png_age = _fig_to_png(plot_age_distribution(df),   width_px=440, height_px=340)
+        png_pay = pngs.get("pay")
+        png_age = pngs.get("age")
         row_data3 = [[]]
         if png_pay:
             row_data3[0].append(Image(BytesIO(png_pay), width=half, height=2.7 * inch))
@@ -387,7 +414,7 @@ def generate_pdf_report(df: pd.DataFrame, insights: list[dict]) -> bytes:
 
         # 3e. Customer Conversion Funnel (full width)
         elems.append(Paragraph("3e. Customer Conversion Funnel", sub_sec))
-        png_funnel = _fig_to_png(plot_sales_funnel(df), width_px=700, height_px=360)
+        png_funnel = pngs.get("funnel")
         elems += _chart_elem(png_funnel, PAGE_W * 0.75, 2.8 * inch)
 
     except Exception as exc:
