@@ -118,6 +118,11 @@ if not st.session_state.get("authenticated"):
 
 
 
+# ─── Global Navigation Toggle ─────────────────────────────────────────────────
+from components.navigation_toggle import render_navigation_toggle
+render_navigation_toggle()
+
+
 # ─── Authenticated Shell ──────────────────────────────────────────────────────
 
 current_user  = st.session_state["user"] or {"username": "guest", "full_name": "Guest", "email": "", "role": "Admin"}

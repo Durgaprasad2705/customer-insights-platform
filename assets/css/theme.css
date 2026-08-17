@@ -563,6 +563,81 @@ section[data-testid="stSidebar"] * { color: var(--nx-text-1) !important; }
   margin-bottom: 24px;
 }
 .ip-topbar-left { display: flex; align-items: center; gap: 6px; }
+
+/* ── Global Navigation Toggle Button ── */
+.cip-nav-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 5px 12px;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-md, 8px);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+  margin-right: 6px;
+  text-decoration: none;
+  line-height: 1.2;
+}
+.cip-nav-toggle-btn.cip-floating {
+  position: fixed;
+  top: 14px;
+  left: 18px;
+  z-index: 999999;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+.cip-nav-toggle-btn.cip-sidebar-collapsed {
+  background: var(--nx-teal-sub, rgba(0, 212, 168, 0.08));
+  border: 1px solid var(--nx-border-teal, rgba(0, 212, 168, 0.32));
+  color: var(--nx-teal, #00D4A8);
+  box-shadow: 0 2px 10px rgba(0, 212, 168, 0.12);
+}
+.cip-nav-toggle-btn.cip-sidebar-collapsed:hover {
+  background: rgba(0, 212, 168, 0.18);
+  border-color: rgba(0, 212, 168, 0.6);
+  color: var(--nx-teal-light, #4DFFD9);
+  box-shadow: 0 0 16px rgba(0, 212, 168, 0.28);
+  transform: translateY(-1px);
+}
+.cip-nav-toggle-btn.cip-sidebar-collapsed:active {
+  transform: scale(0.97);
+}
+.cip-nav-toggle-btn.cip-sidebar-open {
+  background: var(--nx-coral-sub, rgba(255, 107, 138, 0.08));
+  border: 1px solid rgba(255, 107, 138, 0.3);
+  color: var(--nx-coral, #FF6B8A);
+  box-shadow: 0 2px 10px rgba(255, 107, 138, 0.1);
+}
+.cip-nav-toggle-btn.cip-sidebar-open:hover {
+  background: rgba(255, 107, 138, 0.18);
+  border-color: rgba(255, 107, 138, 0.6);
+  color: var(--nx-coral-light, #FF9DB3);
+  box-shadow: 0 0 16px rgba(255, 107, 138, 0.25);
+  transform: translateY(-1px);
+}
+.cip-nav-toggle-btn.cip-sidebar-open:active {
+  transform: scale(0.97);
+}
+.cip-nav-toggle-icon {
+  font-size: 13px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.cip-nav-toggle-btn:hover .cip-nav-toggle-icon {
+  transform: scale(1.1);
+}
+.cip-nav-toggle-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
 .ip-breadcrumb-sep {
   color: var(--nx-text-4);
   font-size: 0.72rem; font-weight: 300; margin: 0 1px;
