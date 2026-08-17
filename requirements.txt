@@ -1,0 +1,16 @@
+# Core Platform & Web Framework
+streamlit>=1.35.0
+pandas>=2.0.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+plotly>=5.20.0
+
+# Reports & Excel Export
+openpyxl>=3.1.0
+reportlab>=4.1.0
+kaleido>=1.0.0
+
+# Optional Google OAuth Integration
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+requests>=2.31.0
