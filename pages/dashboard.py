@@ -84,8 +84,13 @@ def _compute_kpis(df) -> dict:
 # ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
 def _render_admin(df) -> None:
-    """Full platform dashboard + system-health metrics for Admin."""
+    """Full platform dashboard + system health quick-links for Admin."""
     _welcome_hero("Admin")
+
+    # Initialise chart storage for report reuse
+    if "report_charts" not in st.session_state:
+        st.session_state["report_charts"] = {}
+    charts = st.session_state["report_charts"]
 
     kpis = _compute_kpis(df)
 
@@ -124,18 +129,32 @@ def _render_admin(df) -> None:
 
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-    # Charts: full set
+    # Charts: full set — store figures for report reuse
+    fig_trend = plot_revenue_trend(df)
+    fig_cat   = plot_category_revenue(df)
+    fig_brand = plot_brand_performance(df)
+    fig_funnel = plot_sales_funnel(df)
+    fig_reg   = plot_region_sales(df)
+    fig_prod  = plot_top_products(df, top_n=6)
+
+    charts["trend"]  = fig_trend
+    charts["cat"]    = fig_cat
+    charts["brand"]  = fig_brand
+    charts["funnel"] = fig_funnel
+    charts["reg"]    = fig_reg
+    charts["prod"]   = fig_prod
+
     col_a, col_b = st.columns([1.65, 1], gap="small")
     with col_a:
-        st.plotly_chart(plot_revenue_trend(df),    use_container_width=True)
+        st.plotly_chart(fig_trend,  use_container_width=True)
     with col_b:
-        st.plotly_chart(plot_category_revenue(df), use_container_width=True)
+        st.plotly_chart(fig_cat,    use_container_width=True)
 
     col_c, col_d = st.columns(2, gap="small")
     with col_c:
-        st.plotly_chart(plot_brand_performance(df), use_container_width=True)
+        st.plotly_chart(fig_brand,  use_container_width=True)
     with col_d:
-        st.plotly_chart(plot_sales_funnel(df),      use_container_width=True)
+        st.plotly_chart(fig_funnel, use_container_width=True)
 
     # AI Insights
     st.markdown(section_title("AI Automated Insights & Recommendations", "🤖"), unsafe_allow_html=True)
@@ -152,9 +171,9 @@ def _render_admin(df) -> None:
 
     col_e, col_f = st.columns(2, gap="small")
     with col_e:
-        st.plotly_chart(plot_region_sales(df),       use_container_width=True)
+        st.plotly_chart(fig_reg,  use_container_width=True)
     with col_f:
-        st.plotly_chart(plot_top_products(df, top_n=6), use_container_width=True)
+        st.plotly_chart(fig_prod, use_container_width=True)
 
     # Admin quick-links
     st.markdown(section_title("Admin Quick Actions", "⚙️"), unsafe_allow_html=True)
@@ -187,6 +206,11 @@ def _render_admin(df) -> None:
 def _render_analyst(df) -> None:
     """Full analytics dashboard + data-quality badge for Analyst."""
     _welcome_hero("Analyst")
+
+    # Initialise chart storage for report reuse
+    if "report_charts" not in st.session_state:
+        st.session_state["report_charts"] = {}
+    charts = st.session_state["report_charts"]
 
     kpis = _compute_kpis(df)
 
@@ -221,17 +245,32 @@ def _render_analyst(df) -> None:
 
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
+    # Charts — store figures for report reuse
+    fig_trend  = plot_revenue_trend(df)
+    fig_cat    = plot_category_revenue(df)
+    fig_brand  = plot_brand_performance(df)
+    fig_funnel = plot_sales_funnel(df)
+    fig_reg    = plot_region_sales(df)
+    fig_prod   = plot_top_products(df, top_n=6)
+
+    charts["trend"]  = fig_trend
+    charts["cat"]    = fig_cat
+    charts["brand"]  = fig_brand
+    charts["funnel"] = fig_funnel
+    charts["reg"]    = fig_reg
+    charts["prod"]   = fig_prod
+
     col_a, col_b = st.columns([1.65, 1], gap="small")
     with col_a:
-        st.plotly_chart(plot_revenue_trend(df),    use_container_width=True)
+        st.plotly_chart(fig_trend,  use_container_width=True)
     with col_b:
-        st.plotly_chart(plot_category_revenue(df), use_container_width=True)
+        st.plotly_chart(fig_cat,    use_container_width=True)
 
     col_c, col_d = st.columns(2, gap="small")
     with col_c:
-        st.plotly_chart(plot_brand_performance(df), use_container_width=True)
+        st.plotly_chart(fig_brand,  use_container_width=True)
     with col_d:
-        st.plotly_chart(plot_sales_funnel(df),      use_container_width=True)
+        st.plotly_chart(fig_funnel, use_container_width=True)
 
     st.markdown(section_title("AI Automated Insights & Recommendations", "🤖"), unsafe_allow_html=True)
     insights = generate_ai_insights(df)
@@ -247,9 +286,9 @@ def _render_analyst(df) -> None:
 
     col_e, col_f = st.columns(2, gap="small")
     with col_e:
-        st.plotly_chart(plot_region_sales(df),          use_container_width=True)
+        st.plotly_chart(fig_reg,  use_container_width=True)
     with col_f:
-        st.plotly_chart(plot_top_products(df, top_n=6), use_container_width=True)
+        st.plotly_chart(fig_prod, use_container_width=True)
 
 
 # ─── Manager Dashboard ────────────────────────────────────────────────────────
@@ -257,6 +296,11 @@ def _render_analyst(df) -> None:
 def _render_manager(df) -> None:
     """Executive view: KPIs, revenue, region, top products — no ML/upload clutter."""
     _welcome_hero("Manager")
+
+    # Initialise chart storage for report reuse
+    if "report_charts" not in st.session_state:
+        st.session_state["report_charts"] = {}
+    charts = st.session_state["report_charts"]
 
     kpis = _compute_kpis(df)
 
@@ -275,19 +319,30 @@ def _render_manager(df) -> None:
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
+    # Charts — store figures for report reuse
+    fig_trend = plot_revenue_trend(df)
+    fig_reg   = plot_region_sales(df)
+    fig_prod  = plot_top_products(df, top_n=8)
+    fig_cat   = plot_category_revenue(df)
+
+    charts["trend"] = fig_trend
+    charts["reg"]   = fig_reg
+    charts["prod"]  = fig_prod
+    charts["cat"]   = fig_cat
+
     # Manager sees: revenue trend (wide) + region sales
     col_a, col_b = st.columns([1.6, 1], gap="small")
     with col_a:
-        st.plotly_chart(plot_revenue_trend(df),    use_container_width=True)
+        st.plotly_chart(fig_trend, use_container_width=True)
     with col_b:
-        st.plotly_chart(plot_region_sales(df),     use_container_width=True)
+        st.plotly_chart(fig_reg,   use_container_width=True)
 
     # Top products + category breakdown
     col_c, col_d = st.columns(2, gap="small")
     with col_c:
-        st.plotly_chart(plot_top_products(df, top_n=8), use_container_width=True)
+        st.plotly_chart(fig_prod,  use_container_width=True)
     with col_d:
-        st.plotly_chart(plot_category_revenue(df),      use_container_width=True)
+        st.plotly_chart(fig_cat,   use_container_width=True)
 
     # Focused AI Insights (top 3 only for manager — keep it brief)
     st.markdown(section_title("Executive AI Insights", "🤖"), unsafe_allow_html=True)

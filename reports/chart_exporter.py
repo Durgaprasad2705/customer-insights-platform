@@ -3,6 +3,7 @@ Chart Exporter — Reliable chart-to-PNG conversion with retry, fallback,
 and thread-safe kaleido access.
 """
 
+import copy
 import logging
 import threading
 import time
@@ -19,6 +20,62 @@ _KALEIDO_LOCK = threading.Lock()
 # Retry configuration
 _MAX_RETRIES = 3
 _RETRY_DELAY = 0.5  # seconds between retries
+
+# ──────────────────────────────────────────────────────────────────────────────
+# PDF-safe layout: white background, dark text, visible grid for print
+# ──────────────────────────────────────────────────────────────────────────────
+
+_PDF_LAYOUT = dict(
+    paper_bgcolor="#FFFFFF",
+    plot_bgcolor="#FFFFFF",
+    font=dict(
+        family="Helvetica, Arial, sans-serif",
+        color="#1E293B",
+        size=12,
+    ),
+    title=dict(font=dict(color="#0F172A", size=15, family="Helvetica, Arial, sans-serif")),
+    legend=dict(bgcolor="rgba(255,255,255,0)", font=dict(color="#1E293B")),
+    xaxis=dict(
+        gridcolor="rgba(0,0,0,0.08)", showgrid=True,
+        color="#334155", zeroline=False,
+        linecolor="#CBD5E1", linewidth=1,
+    ),
+    yaxis=dict(
+        gridcolor="rgba(0,0,0,0.08)", showgrid=True,
+        color="#334155", zeroline=False,
+        linecolor="#CBD5E1", linewidth=1,
+    ),
+    margin=dict(l=40, r=20, t=50, b=40),
+)
+
+
+def prepare_fig_for_pdf(fig):
+    """Return a deep copy of *fig* with a PDF-safe white-background layout.
+
+    This ensures charts are legible on white PDF pages regardless of
+    whatever dark-mode styling was applied for the Streamlit UI.
+    """
+    pdf_fig = copy.deepcopy(fig)
+    pdf_fig.update_layout(**_PDF_LAYOUT)
+
+    # Fix pie / donut chart text colours so they're visible on white
+    for trace in pdf_fig.data:
+        trace_type = getattr(trace, "type", "")
+        if trace_type in ("pie", "sunburst", "treemap"):
+            if hasattr(trace, "textfont"):
+                trace.textfont.color = "#1E293B"
+        # Make funnel text visible
+        if trace_type == "funnel":
+            if hasattr(trace, "textfont"):
+                trace.textfont.color = "#1E293B"
+        # Ensure scatter markers stay visible
+        if trace_type == "scatter" and hasattr(trace, "marker"):
+            if trace.marker and hasattr(trace.marker, "line"):
+                if trace.marker.line and trace.marker.line.color:
+                    if "rgba(255,255,255" in str(trace.marker.line.color):
+                        trace.marker.line.color = "rgba(0,0,0,0.15)"
+
+    return pdf_fig
 
 
 def _create_fallback_png(chart_name: str, width_px: int = 700, height_px: int = 380) -> bytes | None:
@@ -79,7 +136,12 @@ def _create_fallback_png(chart_name: str, width_px: int = 700, height_px: int = 
 def fig_to_png(fig, width_px: int = 700, height_px: int = 380, chart_name: str = "chart") -> bytes | None:
     """Convert a Plotly figure to PNG bytes using kaleido.
 
+    The figure is first deep-copied and re-styled with a PDF-safe
+    white-background layout via ``prepare_fig_for_pdf`` so charts are
+    always legible on white PDF pages.
+
     Features:
+    - Applies PDF-safe layout before export.
     - Retries up to ``_MAX_RETRIES`` times on failure.
     - Uses a global lock to prevent concurrent kaleido access.
     - Falls back to a styled placeholder on persistent failure.
@@ -89,6 +151,9 @@ def fig_to_png(fig, width_px: int = 700, height_px: int = 380, chart_name: str =
         LOGGER.warning("fig_to_png received None figure for chart '%s'", chart_name)
         return _create_fallback_png(chart_name, width_px, height_px)
 
+    # Apply PDF-safe styling before export
+    pdf_fig = prepare_fig_for_pdf(fig)
+
     last_exc = None
 
     for attempt in range(1, _MAX_RETRIES + 1):
@@ -97,7 +162,7 @@ def fig_to_png(fig, width_px: int = 700, height_px: int = 380, chart_name: str =
 
             with _KALEIDO_LOCK:
                 png_bytes = pio.to_image(
-                    fig, format="png",
+                    pdf_fig, format="png",
                     width=width_px, height=height_px,
                     scale=1.2,
                 )
@@ -154,9 +219,16 @@ def get_chart_png(df, chart_name: str, chart_func, width: int, height: int, **kw
 
 
 def _generate_single_chart(func, df, kwargs, w, h, chart_name: str = "chart"):
-    """Generate a single chart PNG with proper kwargs dispatch and error handling."""
+    """Generate a single chart PNG with proper kwargs dispatch and error handling.
+
+    If ``kwargs`` contains ``_prebuilt_fig``, the figure is used directly
+    (for session-state cached figures) instead of calling *func*.
+    """
     try:
-        if kwargs and "rfm_df" in kwargs:
+        # Use pre-built figure from session state if available
+        if kwargs and "_prebuilt_fig" in kwargs:
+            fig = kwargs["_prebuilt_fig"]
+        elif kwargs and "rfm_df" in kwargs:
             fig = func(kwargs["rfm_df"])
         elif kwargs and "combined_df" in kwargs:
             fig = func(kwargs["combined_df"])

@@ -39,18 +39,33 @@ def render(df) -> None:
         k4.metric("Unique Customers", fmt_number(df[cust_col].nunique()))
 
     # ── Revenue Trend + Region ────────────────────────────────────────────────
+    # Store figures in session state for report reuse
+    if "report_charts" not in st.session_state:
+        st.session_state["report_charts"] = {}
+    charts = st.session_state["report_charts"]
+
+    fig_trend = plot_revenue_trend(df)
+    fig_reg   = plot_region_sales(df)
+    fig_pay   = plot_payment_methods(df)
+    fig_age   = plot_age_distribution(df)
+
+    charts["trend"] = fig_trend
+    charts["reg"]   = fig_reg
+    charts["pay"]   = fig_pay
+    charts["age"]   = fig_age
+
     col1, col2 = st.columns([1.6, 1], gap="small")
     with col1:
-        st.plotly_chart(plot_revenue_trend(df), use_container_width=True)
+        st.plotly_chart(fig_trend, use_container_width=True)
     with col2:
-        st.plotly_chart(plot_region_sales(df), use_container_width=True)
+        st.plotly_chart(fig_reg,   use_container_width=True)
 
     # ── Payment Method + Age Distribution ────────────────────────────────────
     col3, col4 = st.columns(2, gap="small")
     with col3:
-        st.plotly_chart(plot_payment_methods(df), use_container_width=True)
+        st.plotly_chart(fig_pay, use_container_width=True)
     with col4:
-        st.plotly_chart(plot_age_distribution(df), use_container_width=True)
+        st.plotly_chart(fig_age, use_container_width=True)
 
     # ── Monthly Revenue Table ─────────────────────────────────────────────────
     if date_col and amt_col:
