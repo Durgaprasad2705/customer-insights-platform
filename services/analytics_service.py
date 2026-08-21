@@ -73,7 +73,7 @@ def _safe_col(df: pd.DataFrame, *candidates: str) -> str | None:
 
 # ─── 1. Revenue Trend (Area) ─────────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_revenue_trend(df: pd.DataFrame) -> go.Figure:
     date_col   = _safe_col(df, "PurchaseDate", "date", "orderdate")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue", "sales")
@@ -104,7 +104,7 @@ def plot_revenue_trend(df: pd.DataFrame) -> go.Figure:
 
 # ─── 2. Category Revenue (Donut) ─────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_category_revenue(df: pd.DataFrame) -> go.Figure:
     cat_col    = _safe_col(df, "Category", "category", "segment")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue", "sales")
@@ -124,7 +124,7 @@ def plot_category_revenue(df: pd.DataFrame) -> go.Figure:
 
 # ─── 3. Top Products (H-Bar) ─────────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_top_products(df: pd.DataFrame, top_n: int = 8) -> go.Figure:
     prod_col   = _safe_col(df, "ProductName", "product", "item")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue", "sales")
@@ -146,7 +146,7 @@ def plot_top_products(df: pd.DataFrame, top_n: int = 8) -> go.Figure:
 
 # ─── 4. Brand Performance (Bar) ──────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_brand_performance(df: pd.DataFrame) -> go.Figure:
     brand_col  = _safe_col(df, "Brand", "brand", "manufacturer")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue", "sales")
@@ -168,7 +168,7 @@ def plot_brand_performance(df: pd.DataFrame) -> go.Figure:
 
 # ─── 5. Region Sales (Bar) ───────────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_region_sales(df: pd.DataFrame) -> go.Figure:
     region_col = _safe_col(df, "Region", "region", "state", "country", "location")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue", "sales")
@@ -188,7 +188,7 @@ def plot_region_sales(df: pd.DataFrame) -> go.Figure:
 
 # ─── 6. Customer Funnel ───────────────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_sales_funnel(df: pd.DataFrame) -> go.Figure:
     cust_col = _safe_col(df, "CustomerID", "customer")
     orders   = max(len(df), 1)
@@ -208,7 +208,7 @@ def plot_sales_funnel(df: pd.DataFrame) -> go.Figure:
 
 # ─── 7. Customer Segment Scatter ─────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_segment_scatter(rfm_df: pd.DataFrame) -> go.Figure:
     if rfm_df.empty or "SegmentName" not in rfm_df.columns:
         return _empty_fig("Customer Segments – run model first")
@@ -226,7 +226,7 @@ def plot_segment_scatter(rfm_df: pd.DataFrame) -> go.Figure:
 
 # ─── 8. Forecast Chart (Combined Area) ───────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_forecast(combined_df: pd.DataFrame) -> go.Figure:
     if combined_df.empty:
         return _empty_fig("Revenue Forecast – no data")
@@ -253,7 +253,7 @@ def plot_forecast(combined_df: pd.DataFrame) -> go.Figure:
 
 # ─── 9. Payment Method Distribution (Donut) ──────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_payment_methods(df: pd.DataFrame) -> go.Figure:
     pay_col    = _safe_col(df, "PaymentMethod", "payment")
     amount_col = _safe_col(df, "TotalAmount", "amount", "revenue")
@@ -271,7 +271,7 @@ def plot_payment_methods(df: pd.DataFrame) -> go.Figure:
 
 # ─── 10. Age Distribution (Histogram) ────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_age_distribution(df: pd.DataFrame) -> go.Figure:
     age_col = _safe_col(df, "CustomerAge", "age")
     if not age_col:
@@ -285,7 +285,7 @@ def plot_age_distribution(df: pd.DataFrame) -> go.Figure:
 
 # ─── 11. Gender Split (Donut) ────────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def plot_gender_split(df: pd.DataFrame) -> go.Figure:
     gen_col = _safe_col(df, "Gender", "sex")
     if not gen_col:

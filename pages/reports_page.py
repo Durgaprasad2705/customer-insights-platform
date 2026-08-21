@@ -9,8 +9,7 @@ import streamlit as st
 
 from components.kpi_cards import section_title
 from services.analytics_service import generate_ai_insights
-from services.report_service import generate_csv_export, generate_excel_report, generate_pdf_report
-
+from reports.report_engine import generate_pdf, generate_excel, generate_csv
 
 def render(df, current_user: dict) -> None:
 
@@ -46,16 +45,24 @@ def render(df, current_user: dict) -> None:
                     'AI insights, and transaction preview. Ideal for stakeholder presentations.</div></div>',
                     unsafe_allow_html=True)
         if st.button("⚡  Generate PDF", use_container_width=True, key="gen_pdf"):
-            with st.spinner("Building PDF report…"):
-                try:
-                    pdf_bytes = generate_pdf_report(df, insights)
-                    st.download_button(
-                        "📥 Download PDF", data=pdf_bytes,
-                        file_name=f"Customer_Insights_Report_{today}.pdf",
-                        mime="application/pdf", use_container_width=True,
-                    )
-                except Exception as exc:
-                    st.error(f"PDF generation failed: {exc}")
+            st.session_state["pdf_gen_active"] = True
+            
+        if st.session_state.get("pdf_gen_active"):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            try:
+                pdf_bytes = generate_pdf(df, insights, progress_bar, status_text)
+                status_text.empty()
+                progress_bar.empty()
+                st.download_button(
+                    "📥 Download PDF", data=pdf_bytes,
+                    file_name=f"Customer_Insights_Report_{today}.pdf",
+                    mime="application/pdf", use_container_width=True,
+                )
+            except Exception as exc:
+                st.error(f"PDF generation failed: {exc}")
+            st.session_state["pdf_gen_active"] = False
+
 
     with col2:
         st.markdown('<div class="ip-card"><div style="font-size:2.5rem;margin-bottom:8px;">📗</div>'
@@ -64,17 +71,24 @@ def render(df, current_user: dict) -> None:
                     'Customer Summary, and AI Insights tabs. Best for deep-dive analysis.</div></div>',
                     unsafe_allow_html=True)
         if st.button("⚡  Generate Excel", use_container_width=True, key="gen_excel"):
-            with st.spinner("Building Excel workbook…"):
-                try:
-                    excel_bytes = generate_excel_report(df, insights)
-                    st.download_button(
-                        "📥 Download Excel", data=excel_bytes,
-                        file_name=f"Customer_Insights_Analytics_{today}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True,
-                    )
-                except Exception as exc:
-                    st.error(f"Excel generation failed: {exc}")
+            st.session_state["excel_gen_active"] = True
+            
+        if st.session_state.get("excel_gen_active"):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            try:
+                excel_bytes = generate_excel(df, insights, progress_bar, status_text)
+                status_text.empty()
+                progress_bar.empty()
+                st.download_button(
+                    "📥 Download Excel", data=excel_bytes,
+                    file_name=f"Customer_Insights_Analytics_{today}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                )
+            except Exception as exc:
+                st.error(f"Excel generation failed: {exc}")
+            st.session_state["excel_gen_active"] = False
 
     with col3:
         st.markdown('<div class="ip-card"><div style="font-size:2.5rem;margin-bottom:8px;">📊</div>'
@@ -84,7 +98,7 @@ def render(df, current_user: dict) -> None:
                     unsafe_allow_html=True)
         if st.button("⚡  Prepare CSV Export", use_container_width=True, key="gen_csv"):
             try:
-                csv_bytes = generate_csv_export(df)
+                csv_bytes = generate_csv(df)
                 st.download_button(
                     "📥 Download CSV", data=csv_bytes,
                     file_name=f"Customer_Insights_Data_{today}.csv",

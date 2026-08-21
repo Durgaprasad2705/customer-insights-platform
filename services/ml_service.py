@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 
 # ─── 1. Customer Segmentation (K-Means + RFM) ────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def train_segmentation(df: pd.DataFrame, n_clusters: int = 4) -> dict[str, Any]:
     """
     K-Means clustering on RFM data with automatic segment labelling.
@@ -96,7 +96,7 @@ def train_segmentation(df: pd.DataFrame, n_clusters: int = 4) -> dict[str, Any]:
 
 # ─── 2. Churn Prediction (Random Forest Classifier) ──────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def train_churn(df: pd.DataFrame) -> dict[str, Any]:
     """
     Random Forest churn classifier.
@@ -136,7 +136,7 @@ def train_churn(df: pd.DataFrame) -> dict[str, Any]:
 
 # ─── 3. Customer Lifetime Value Regression ───────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def train_clv(df: pd.DataFrame) -> dict[str, Any]:
     """
     Random Forest regressor for 12-month CLV prediction.
@@ -170,7 +170,7 @@ def train_clv(df: pd.DataFrame) -> dict[str, Any]:
 
 # ─── 4. Sales Revenue Forecasting (Ridge Time-Series) ────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def forecast_revenue(df: pd.DataFrame, months_ahead: int = 6) -> dict[str, Any]:
     """
     Ridge regression linear time-series forecast for monthly revenue.
@@ -222,7 +222,7 @@ def forecast_revenue(df: pd.DataFrame, months_ahead: int = 6) -> dict[str, Any]:
 
 # ─── 5. Product Recommendation Engine ────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def generate_recommendations(df: pd.DataFrame, category: str | None = None) -> list[dict]:
     """
     Co-occurrence based product recommendation engine.

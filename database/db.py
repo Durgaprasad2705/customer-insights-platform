@@ -26,6 +26,7 @@ _INIT_DONE = False
 
 # ─── Connection ───────────────────────────────────────────────────────────────
 
+@st.cache_resource(show_spinner=False)
 def _connect() -> sqlite3.Connection:
     """Return a high-performance thread-safe SQLite connection with row factory enabled."""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=15)
@@ -136,7 +137,6 @@ def init_db() -> None:
         )
 
     conn.commit()
-    conn.close()
     _INIT_DONE = True
 
 

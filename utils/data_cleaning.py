@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import streamlit as st
 
 
 # ─── Canonical Schema Aliases ────────────────────────────────────────────────
@@ -120,6 +121,7 @@ def _fill_defaults(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(show_spinner=False)
 def standardise_dataset(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str]]:
     """
     Map flexible column names → canonical schema.
@@ -173,6 +175,7 @@ def standardise_dataset(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, s
     return df, mapped
 
 
+@st.cache_data(show_spinner=False)
 def clean_and_preprocess(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
     """
     Full cleaning + RFM augmentation pipeline.
